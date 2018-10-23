@@ -51,13 +51,12 @@ class Database:
 
     #add_block
 
-    def add_song(self, album_name, song):
+    def add_song(self, album_id, song):
         if self.cursor != None:
             query = self.cursor.mogrify(
                 "INSERT INTO songs (name, length) VALUES(%s, %s)", (song.name, song.length)
             )
             self.cursor.execute(query)
-            album_id = self.get_album_id_by_name(album_name)
             album_new = self.get_album_by_id(album_id)
             album_new.tracksCount += 1
             self.connection.commit()
@@ -69,13 +68,12 @@ class Database:
             self.connection.commit()
             self.edit_album(album_id, album_new)
 
-    def add_album(self, band_name, album):
+    def add_album(self, band_id, album):
         if self.cursor != None:
             query = self.cursor.mogrify(
                 "INSERT INTO albums (name, trackscount) VALUES(%s, %s)", (album.name, album.tracksCount))
             self.cursor.execute(query)
             self.connection.commit()
-            band_id = self.get_band_id_by_name(band_name)
             album_id = self.get_album_id_by_name(album.name)
             query = self.cursor.mogrify(
                 "INSERT INTO bandalbum (bandid, albumid) VALUES (%s, %s)", (band_id, album_id))
@@ -216,6 +214,19 @@ class Database:
             print("%s" % e)
             return None
 
+    def get_song_by_id(self, song_id):
+        try:
+            query = "SELECT * FROM songs WHERE id='%s'" % song_id
+            self.cursor.execute(query)
+            res = self.cursor.fetchall()
+            if len(res) != 0:
+                res = res[0]
+                res = Track(res[1], res[2], res[0])
+                return res
+        except Exception as e:
+            print("%s" % e)
+            return None
+
     def get_band_id_by_name(self, band_name):
         try:
             self.cursor.execute(self.cursor.mogrify(
@@ -265,9 +276,30 @@ class Database:
         a = Album(self.__generate_random_string(1, 10), 0)
         return a
 
-    def generate_random_track(self, number_in_album=0):
-        t = Track(self.__generate_random_string(1, 15), random.randint(60, 240), number_in_album)
+    def generate_random_track(self):
+        t = Track(self.__generate_random_string(1, 15), random.randint(60, 240))
         return t
+    
+    def fill_db_with_random_entities(self, quantity):
+        bands = []
+        albums = []
+        songs = []
+        for i in range(0, quantity):
+            print(i)
+            bands.append(self.generate_random_band())
+            albums.append(self.generate_random_album())
+            songs.append(self.generate_random_track())
+        print(bands, "\n", albums, "\n", songs)
+
+        for band in bands:
+            self.add_band(band)
+        
+        for album in albums:
+            self.add_album(bands[random.randint(0, quantity-1)].id, album)
+            album.id = self.get_album_id_by_name(album.name)
+        
+        for song in songs:
+            self.add_song(albums[random.randint(0, quantity-1)].id, song)
 
     # search+block
 
@@ -288,6 +320,19 @@ class Database:
         except Exception as e:
             print('%s' % e)
             return None
+
+    def search_by_word_not_belong(self, word):
+        query = f"""SELECT * FROM bands WHERE to_tsvector(name) @@ to_tsquery('!{word}');"""
+        self.cursor.execute(query)
+        print('ok')
+        return self.cursor.fetchall()
+
+    def search_by_phrase(self, phrase):
+        sql = f"""SELECT * FROM renting_list 
+                  JOIN renters USING(driver_license) 
+                  JOIN cars USING (car_number) 
+                  WHERE to_tsvector(model) @@ phraseto_tsquery('{phrase}');"""
+        return pd.read_sql(sql, self._db_connection)        
 
     @staticmethod
     def __generate_random_string(min: int, max: int):
