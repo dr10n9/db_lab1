@@ -327,12 +327,13 @@ class Database:
         print('ok')
         return self.cursor.fetchall()
 
-    def search_by_phrase(self, phrase):
-        sql = f"""SELECT * FROM renting_list 
-                  JOIN renters USING(driver_license) 
-                  JOIN cars USING (car_number) 
-                  WHERE to_tsvector(model) @@ phraseto_tsquery('{phrase}');"""
-        return pd.read_sql(sql, self._db_connection)        
+    # def search_by_phrase(self, phrase):
+    #     query = f"""SELECT * FROM renting_list 
+    #               JOIN renters USING(driver_license) 
+    #               JOIN cars USING (car_number) 
+    #               WHERE to_tsvector(model) @@ phraseto_tsquery('{phrase}');"""
+    #     self.cursor.execute(query)
+    #     return self.cursor.fetchall()
 
     @staticmethod
     def __generate_random_string(min: int, max: int):
