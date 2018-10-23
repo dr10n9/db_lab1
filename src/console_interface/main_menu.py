@@ -20,7 +20,8 @@ class Menu:
         print("1) select entity to interact")
         print("2) get all")
         print("3) search")
-        print("4) exit")
+        print("4) generate random entities")
+        print("5) exit")
 
     def clear(self):
         system('clear')
@@ -36,7 +37,7 @@ class Menu:
     def print_search_menu(self):
         print("1) Band by exists field (bool)")
         print("2) Band by genre filed (enum)")
-        print("3) Song by name (without word)")
+        print("3) Band by name (without word)")
         print("4) Album by name (full phrase)")
         print("5) back")
 
@@ -49,8 +50,35 @@ class Menu:
             self.print_search_menu()
             try:
                 n = int(input("\naction: "))
+                if n == 1:
+                    exists = bool(input("0 for false | 1 for true: "))
+                    bands = self.database.get_bands_by_exists_attr(exists)
+                    if bands != None:
+                        for band in bands:
+                            print("\n", band, "\n")
+                    else:
+                        print("No result")
+                    input()
+
+                elif n == 2:
+                    genre = int(input("Genre (0 rock, 1 rap, 2 punk, 3 chanson, 4 classic): "))
+                    bands = self.database.get_bands_by_genre(list(Genres)[genre])
+                    for b in bands:
+                        print("\n", b, "\n")
+                    input()
+
+                elif n == 3:
+                    name = input("Name: ")
+                    bands = self.database.search_by_word_not_belong(name)
+                    for b in bands:
+                        print("\n", b, "\n")
+                    input()
+                    
+                elif n == 5:
+                    local_loop = 0                        
             except Exception as e:
                 print("%s" % e)
+                input()
         
     def album_interact(self):
         local_loop = 1
@@ -59,9 +87,74 @@ class Menu:
             print("\nALBUM ACTION\n")
             self.print_actions_menu()
             try:
+                # print("1) create")
+                # print("2) read")
+                # print("3) update")
+                # print("4) delete")
+                # print("5) back")
                 n = int(input())
+                if n == 1:
+                    print()
+                    try:
+                        name = input("Name: ")
+                        band_id = int(input("Band id:"))
+                        a = album.Album(name, 0)
+                        self.database.add_album(band_id, a)
+                    except Exception as e:
+                        print("%s" % e)
+                        input()
+                elif n == 2:
+                    print()
+                    try:
+                        id = int(input("Album id to get: "))
+                        a = self.database.get_album_by_id(id)
+                        if a != None:
+                            a.print_self()
+                        else:
+                            print("no entity")
+                            input()
+                        input()
+                    except Exception as e:
+                        print("%s" % e)
+                        input()
+                elif n == 3:
+                    print()
+                    try:
+                        id = int(input("id: "))
+                        a = self.database.get_album_by_id(id)
+                        if a != None:
+                            changed = False
+                            print("\nold entity")
+                            a.print_self()
+                            print()
+                            
+                            if input("Change tracksCount? (Y/N)") == 'Y':
+                                na = album.Album(input("new name: "), int(input("tracksCount: ")), id)
+                            else:
+                                na = album.Album(input("new name: "), a.tracksCount, id)
+                            self.database.edit_song(id, na)
+                            input()
+                        else:
+                            print("No entity")
+                            input()
+                    except Exception as e:
+                        print("%s" % e)
+                        input()
+                elif n == 4:
+                    print()
+                    try:
+                        id = int(input("id: "))
+                        self.database.delete_album_by_id(id)
+                        print()
+                    except Exception as e:
+                        print("%s" % e)
+                        input()
+                elif n == 5:
+                    local_loop = 0
+                    
             except Exception as e:
                 print("%s" % e)
+                input()
 
     def song_interact(self):
         local_loop = 1
@@ -306,6 +399,9 @@ class Menu:
                     self.clear()
                     self.search_menu_handler()
                 elif n == 4:
+                    self.clear()
+                    self.database.fill_db_with_random_entities(int(input("Number of entities in each table:")))
+                elif n == 5:
                     loop = 0
                 else:
                     print("wrong choice")
