@@ -12,7 +12,7 @@ from enum import Enum, auto
 
 
 class Menu:
-    def __init__(self, database: Database):
+    def __init__(self, database):
         self.database = database
 
     def print_main_menu(self):
@@ -70,10 +70,22 @@ class Menu:
                 elif n == 3:
                     name = input("Name: ")
                     bands = self.database.search_by_word_not_belong(name)
-                    for b in bands:
-                        print("\n", b, "\n")
+                    if len(bands) == 0:
+                        print('empty')
+                    else:
+                        for b in bands:
+                            print("\n", b, "\n")
                     input()
-                    
+                elif n == 4:
+                    phrase = input("Phrase: ")
+                    res = self.database.search_by_phrase(phrase)
+                    if len(res) == 0:
+                        print('empty')
+                    else:
+                        for r in res:
+                            print("\n", r, "\n")
+                    input()
+
                 elif n == 5:
                     local_loop = 0                        
             except Exception as e:
@@ -336,6 +348,8 @@ class Menu:
                 n = int(input("select: "))
                 if n == 1:
                     self.band_interact()
+                elif n == 2:
+                    self.album_interact()
                 elif n == 3:
                     self.song_interact()
                 elif n == 4:

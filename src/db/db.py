@@ -19,7 +19,7 @@ class Database:
                 host='127.0.0.1',
                 dbname=databaseName,
                 user='postgres',
-                password='1'
+                password='11111111'
             )
             self.cursor = self.connection.cursor(
                 cursor_factory=psycopg2.extras.DictCursor)
@@ -324,16 +324,15 @@ class Database:
     def search_by_word_not_belong(self, word):
         query = f"""SELECT * FROM bands WHERE to_tsvector(name) @@ to_tsquery('!{word}');"""
         self.cursor.execute(query)
-        print('ok')
         return self.cursor.fetchall()
 
-    # def search_by_phrase(self, phrase):
-    #     query = f"""SELECT * FROM renting_list 
-    #               JOIN renters USING(driver_license) 
-    #               JOIN cars USING (car_number) 
-    #               WHERE to_tsvector(model) @@ phraseto_tsquery('{phrase}');"""
-    #     self.cursor.execute(query)
-    #     return self.cursor.fetchall()
+    def search_by_phrase(self, phrase):
+        query = f"""
+            SELECT * from albums
+            where to_tsvector(albums.name) @@ phraseto_tsquery('%s')
+        """ % phrase
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
 
     @staticmethod
     def __generate_random_string(min: int, max: int):
